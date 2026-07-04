@@ -3,6 +3,19 @@ export interface BlogPost {
   id: number;
   title: string;
   body: string;
+  createdAt?: string; // ISO 8601 timestamp
+  updatedAt?: string; // ISO 8601 timestamp
+}
+
+export interface CreatePostInput {
+  title: string;
+  body: string;
+  userId?: number;
+}
+
+export interface UpdatePostInput {
+  title?: string;
+  body?: string;
 }
 
 export interface PaginationParams {
