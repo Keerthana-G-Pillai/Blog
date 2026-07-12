@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useCallback } from 'react'
-import { Button } from './ui/button'
+import { useEffect, useRef, useCallback } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 export interface ConfirmationDialogProps {
-  isOpen: boolean
-  onConfirm: () => void
-  onCancel: () => void
-  title: string
-  message: string
-  confirmLabel?: string
-  isDestructive?: boolean
+  isOpen: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  isDestructive?: boolean;
 }
 
 export function ConfirmationDialog({
@@ -19,107 +19,103 @@ export function ConfirmationDialog({
   onCancel,
   title,
   message,
-  confirmLabel = 'Delete',
+  confirmLabel = 'Confirm',
   isDestructive = false,
 }: ConfirmationDialogProps) {
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const cancelButtonRef = useRef<HTMLButtonElement>(null)
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
-  // Close on Escape key press
-  const handleKeyDown = useCallback(
+  const handleKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onCancel()
-      }
-
-      // Trap focus within dialog
-      if (e.key === 'Tab' && dialogRef.current) {
-        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const firstElement = focusableElements[0]
-        const lastElement = focusableElements[focusableElements.length - 1]
-
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            e.preventDefault()
-            lastElement?.focus()
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            e.preventDefault()
-            firstElement?.focus()
-          }
-        }
-      }
+      if (e.key === 'Escape') onCancel();
     },
     [onCancel]
-  )
+  );
 
   useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown)
-      // Focus the cancel button when dialog opens
-      cancelButtonRef.current?.focus()
-      // Prevent body scroll when dialog is open
-      document.body.style.overflow = 'hidden'
-    }
-
+    if (!isOpen) return;
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    cancelRef.current?.focus();
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
-    }
-  }, [isOpen, handleKeyDown])
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, handleKey]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 transition-opacity"
+        className="absolute inset-0"
+        style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(4px)' }}
         onClick={onCancel}
         aria-hidden="true"
       />
 
       {/* Dialog */}
       <div
-        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirmation-dialog-title"
-        aria-describedby="confirmation-dialog-message"
-        className="relative z-50 w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-lg"
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-desc"
+        className="relative z-10 w-full max-w-sm rounded-2xl p-6"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-xl)',
+        }}
       >
-        <h2
-          id="confirmation-dialog-title"
-          className="text-lg font-semibold text-foreground"
-        >
+        {/* Icon */}
+        {isDestructive && (
+          <div
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
+            style={{ background: 'rgba(239,68,68,0.08)' }}
+          >
+            <AlertTriangle className="h-6 w-6" style={{ color: 'var(--color-danger)' }} />
+          </div>
+        )}
+
+        <h2 id="dialog-title" className="text-base font-bold text-center mb-2"
+          style={{ color: 'var(--text-primary)' }}>
           {title}
         </h2>
-        <p
-          id="confirmation-dialog-message"
-          className="mt-2 text-sm text-muted-foreground"
-        >
+        <p id="dialog-desc" className="text-sm text-center mb-6"
+          style={{ color: 'var(--text-secondary)' }}>
           {message}
         </p>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button
-            ref={cancelButtonRef}
-            variant="outline"
+        <div className="flex gap-3">
+          <button
+            ref={cancelRef}
             onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-default)',
+            }}
           >
             Cancel
-          </Button>
-          <Button
-            variant={isDestructive ? 'destructive' : 'default'}
+          </button>
+          <button
             onClick={onConfirm}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={isDestructive ? {
+              background: 'rgba(239,68,68,0.08)',
+              color: '#EF4444',
+              border: '1px solid rgba(239,68,68,0.2)',
+            } : {
+              background: 'var(--accent)',
+              color: '#fff',
+              border: '1px solid transparent',
+            }}
           >
             {confirmLabel}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

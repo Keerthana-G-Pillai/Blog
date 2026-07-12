@@ -1,160 +1,157 @@
-import Link from 'next/link';
 import { Metadata } from 'next';
-import { fetchUserById, fetchPostsByUserId, fetchAllUsers } from '@/lib/api-client';
+import Link from 'next/link';
+import { ArrowLeft, Mail, Phone, Globe, Building2, MapPin, FileText } from 'lucide-react';
+import { fetchUserById, fetchAllUsers, fetchAllPosts } from '@/lib/api-client';
 import { BlogCard } from '@/components/blog-card';
-import { Breadcrumb } from '@/components/breadcrumb';
+import { notFound } from 'next/navigation';
 
-interface UserProfilePageProps {
-  params: Promise<{ id: string }>;
-}
+interface Props { params: Promise<{ id: string }> }
 
-export async function generateMetadata({
-  params,
-}: UserProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const user = await fetchUserById(Number(id));
-
-  if (!user) {
-    return {
-      title: 'User Not Found',
-      description: 'The user profile you are looking for does not exist.',
-    };
-  }
-
+  if (!user) return { title: 'Author Not Found' };
   return {
-    title: `${user.name} - Profile`,
-    description: `View ${user.name}'s profile and blog posts. Works at ${user.company.name}.`,
-    openGraph: {
-      title: `${user.name} - Profile`,
-      description: `View ${user.name}'s profile and blog posts.`,
-      type: 'profile',
-    },
+    title: `${user.name}`,
+    description: `Articles by ${user.name} — ${user.company.catchPhrase}`,
   };
 }
 
 export async function generateStaticParams() {
-  const users = await fetchAllUsers();
-  return users.map((user) => ({
-    id: user.id.toString(),
-  }));
+  try {
+    const users = await fetchAllUsers();
+    return users.map((u) => ({ id: u.id.toString() }));
+  } catch {
+    return [];
+  }
 }
 
-export default async function UserProfilePage({ params }: UserProfilePageProps) {
+const ACCENTS = [
+  { bg: 'rgba(79,70,229,0.08)',   color: '#4F46E5', line: '#4F46E5' },
+  { bg: 'rgba(236,72,153,0.08)',  color: '#EC4899', line: '#EC4899' },
+  { bg: 'rgba(16,185,129,0.08)',  color: '#10B981', line: '#10B981' },
+  { bg: 'rgba(245,158,11,0.08)',  color: '#F59E0B', line: '#F59E0B' },
+  { bg: 'rgba(14,165,233,0.08)',  color: '#0EA5E9', line: '#0EA5E9' },
+  { bg: 'rgba(168,85,247,0.08)',  color: '#A855F7', line: '#A855F7' },
+  { bg: 'rgba(249,115,22,0.08)',  color: '#F97316', line: '#F97316' },
+  { bg: 'rgba(34,197,94,0.08)',   color: '#22C55E', line: '#22C55E' },
+];
+
+export default async function UserProfilePage({ params }: Props) {
   const { id } = await params;
   const user = await fetchUserById(Number(id));
+  if (!user) notFound();
 
-  if (!user) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-16 text-center dark:border-gray-700 dark:bg-gray-900/50">
-          <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-            User Not Found
-          </h1>
-          <p className="mb-8 text-gray-600 dark:text-gray-400">
-            The user profile you are looking for does not exist.
-          </p>
-          <Link
-            href="/users"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 hover:shadow-md dark:hover:bg-blue-500"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Users
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Fetch posts by matching userId from our MockAPI posts
+  const allPosts = await fetchAllPosts();
+  const posts = allPosts.filter((p) => p.userId === user.id);
 
-  const posts = await fetchPostsByUserId(user.id);
+  const accent = ACCENTS[(user.id - 1) % ACCENTS.length];
+  const initials = user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <div className="mb-12">
-        <Breadcrumb
-          items={[
-            { label: 'Home', href: '/' },
-            { label: 'Users', href: '/users' },
-            { label: user.name },
-          ]}
-        />
-      </div>
+    <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8 py-10">
+      {/* Back */}
+      <Link
+        href="/users"
+        className="inline-flex items-center gap-2 text-sm mb-8 transition-colors hover:text-indigo-600"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        All Authors
+      </Link>
 
-      {/* User Info */}
-      <header className="mb-12">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
-          {user.name}
-        </h1>
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Email
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.email}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Phone
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.phone}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Website
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                <a
-                  href={`https://${user.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  {user.website}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Company
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.company.name}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                City
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.address.city}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </header>
+      {/* Profile card */}
+      <div
+        className="rounded-2xl overflow-hidden mb-10"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
+      >
+        {/* Top accent line */}
+        <div className="h-1 w-full" style={{ background: `linear-gradient(to right, ${accent.line}, transparent)` }} />
 
-      {/* User's Posts */}
-      <section>
-        <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
-          Posts by {user.name}
-        </h2>
-        {posts.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <BlogCard key={post.id} post={post} />
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
+            {/* Avatar */}
+            <div
+              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-xl font-extrabold"
+              style={{ background: accent.bg, color: accent.color }}
+            >
+              {initials}
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold mb-0.5" style={{ color: 'var(--text-primary)' }}>
+                {user.name}
+              </h1>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>@{user.username}</p>
+            </div>
+            <div className="sm:ml-auto flex items-center gap-2 self-start sm:self-center">
+              <span
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                style={{ background: accent.bg, color: accent.color }}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                {posts.length} article{posts.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
+          {/* Details grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {[
+              { icon: Mail, label: user.email },
+              { icon: Phone, label: user.phone },
+              { icon: Globe, label: user.website, href: `https://${user.website}` },
+              { icon: Building2, label: user.company.name },
+              { icon: MapPin, label: `${user.address.city}, ${user.address.zipcode}` },
+            ].map(({ icon: Icon, label, href }) => (
+              <div key={label} className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                <Icon className="h-4 w-4 shrink-0" style={{ color: accent.color, opacity: 0.8 }} />
+                {href ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer"
+                    className="truncate transition-colors hover:text-indigo-600"
+                    style={{ color: 'var(--text-secondary)' }}>
+                    {label}
+                  </a>
+                ) : (
+                  <span className="truncate" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+                )}
+              </div>
             ))}
           </div>
+
+          {/* Catchphrase */}
+          {user.company.catchPhrase && (
+            <blockquote
+              className="pl-4 italic text-sm"
+              style={{
+                borderLeft: `3px solid ${accent.line}`,
+                color: 'var(--text-muted)',
+              }}
+            >
+              &ldquo;{user.company.catchPhrase}&rdquo;
+            </blockquote>
+          )}
+        </div>
+      </div>
+
+      {/* Posts */}
+      <section>
+        <h2 className="text-lg font-bold mb-5" style={{ color: 'var(--text-primary)' }}>
+          Articles by{' '}
+          <span style={{ color: accent.color }}>{user.name.split(' ')[0]}</span>
+        </h2>
+
+        {posts.length > 0 ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post) => <BlogCard key={post.id} post={post} />)}
+          </div>
         ) : (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-900/50">
-            <p className="text-gray-600 dark:text-gray-400">
-              This user hasn&apos;t published any posts yet.
+          <div
+            className="rounded-2xl py-16 text-center"
+            style={{ background: 'var(--bg-card)', border: '1px dashed var(--border-default)' }}
+          >
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              No articles published yet.
             </p>
           </div>
         )}

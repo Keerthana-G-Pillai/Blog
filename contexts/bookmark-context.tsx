@@ -3,89 +3,66 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { BookmarkState } from '@/lib/types';
 
-const STORAGE_KEY = 'blog-bookmarks';
-
+const STORAGE_KEY = 'inkverse-bookmarks';
 const BookmarkContext = createContext<BookmarkState | undefined>(undefined);
 
-function readBookmarksFromStorage(): number[] {
+function readFromStorage(): string[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.every((id) => typeof id === 'number')) {
-        return parsed;
-      }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.map(String);
     }
-  } catch {
-    // localStorage unavailable or invalid JSON – fall back to empty
-  }
+  } catch { /* ignore */ }
   return [];
 }
 
-function writeBookmarksToStorage(ids: number[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  } catch {
-    // localStorage unavailable – silently ignore
-  }
+function writeToStorage(ids: string[]): void {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); }
+  catch { /* ignore */ }
 }
 
 export function BookmarkProvider({ children }: { children: React.ReactNode }) {
-  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
-
-  // Hydrate from localStorage after mount (SSR-safe)
-  useEffect(() => {
-    setBookmarkedIds(readBookmarksFromStorage());
-  }, []);
-
-  // Sync to localStorage whenever bookmarkedIds changes (skip initial empty state)
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    if (hydrated) {
-      writeBookmarksToStorage(bookmarkedIds);
-    }
-  }, [bookmarkedIds, hydrated]);
 
-  // Mark hydrated after the first read from localStorage
   useEffect(() => {
+    setBookmarkedIds(readFromStorage());
     setHydrated(true);
   }, []);
 
-  const addBookmark = useCallback((postId: number) => {
-    setBookmarkedIds((prev) => {
-      if (prev.includes(postId)) return prev;
-      return [...prev, postId];
-    });
-  }, []);
+  useEffect(() => {
+    if (hydrated) writeToStorage(bookmarkedIds);
+  }, [bookmarkedIds, hydrated]);
 
-  const removeBookmark = useCallback((postId: number) => {
-    setBookmarkedIds((prev) => prev.filter((id) => id !== postId));
-  }, []);
-
-  const isBookmarked = useCallback(
-    (postId: number) => bookmarkedIds.includes(postId),
-    [bookmarkedIds]
-  );
-
-  const toggleBookmark = useCallback((postId: number) => {
+  const toggleBookmark = useCallback((postId: string) => {
     setBookmarkedIds((prev) =>
       prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
     );
   }, []);
 
+  const isBookmarked = useCallback(
+    (postId: string) => bookmarkedIds.includes(postId),
+    [bookmarkedIds]
+  );
+
+  const addBookmark = useCallback((postId: string) => {
+    setBookmarkedIds((prev) => prev.includes(postId) ? prev : [...prev, postId]);
+  }, []);
+
+  const removeBookmark = useCallback((postId: string) => {
+    setBookmarkedIds((prev) => prev.filter((id) => id !== postId));
+  }, []);
+
   return (
-    <BookmarkContext.Provider
-      value={{ bookmarkedIds, addBookmark, removeBookmark, isBookmarked, toggleBookmark }}
-    >
+    <BookmarkContext.Provider value={{ bookmarkedIds, addBookmark, removeBookmark, isBookmarked, toggleBookmark }}>
       {children}
     </BookmarkContext.Provider>
   );
 }
 
 export function useBookmarks(): BookmarkState {
-  const context = useContext(BookmarkContext);
-  if (!context) {
-    throw new Error('useBookmarks must be used within a BookmarkProvider');
-  }
-  return context;
+  const ctx = useContext(BookmarkContext);
+  if (!ctx) throw new Error('useBookmarks must be used within BookmarkProvider');
+  return ctx;
 }

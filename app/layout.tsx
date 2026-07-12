@@ -1,63 +1,59 @@
-import { Analytics } from '@vercel/analytics/next'
-import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
-import { Providers } from '@/components/providers'
-import './globals.css'
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { Navbar } from '@/components/navbar';
+import { Providers } from '@/components/providers';
+import './globals.css';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
-})
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Blog Hub - Discover Amazing Articles',
-  description: 'A modern blog platform featuring curated articles and insights on various topics.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+  metadataBase: new URL('https://inkverse.dev'),
+  title: {
+    default: 'InkVerse — Discover & Share Amazing Stories',
+    template: '%s | InkVerse',
   },
-}
+  description:
+    'InkVerse is a modern blog platform for discovering thoughtful articles, reading insightful stories, and publishing your own ideas to the world.',
+  keywords: ['blog', 'articles', 'writing', 'stories', 'technology', 'design'],
+  authors: [{ name: 'InkVerse' }],
+  creator: 'InkVerse',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://inkverse.dev',
+    siteName: 'InkVerse',
+    title: 'InkVerse — Discover & Share Amazing Stories',
+    description: 'A modern blog platform for discovering thoughtful articles and sharing your ideas.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'InkVerse — Discover & Share Amazing Stories',
+    description: 'A modern blog platform for discovering thoughtful articles and sharing your ideas.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+};
 
-export const viewport: Viewport = {
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} bg-gray-50 dark:bg-gray-950`} suppressHydrationWarning>
-      <body className="flex min-h-screen flex-col font-sans antialiased">
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body>
         <Providers>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
         </Providers>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
-  )
+  );
 }

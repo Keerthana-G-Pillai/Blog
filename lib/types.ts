@@ -1,42 +1,40 @@
 export interface BlogPost {
+  id: string;
   userId: number;
-  id: number;
   title: string;
   body: string;
-  createdAt?: string; // ISO 8601 timestamp
-  updatedAt?: string; // ISO 8601 timestamp
+  createdAt?: string;
+  updatedAt?: string;
+  // Extended fields stored in MockAPI
+  category?: string;
+  coverImage?: string;
+  readTime?: number;
+  authorName?: string;
+  authorAvatar?: string;
+  excerpt?: string;
+  featured?: boolean;
+  views?: number;
+  likes?: number;
+  tags?: string[];
 }
 
 export interface CreatePostInput {
   title: string;
   body: string;
+  category?: string;
   userId?: number;
+  coverImage?: string;
+  tags?: string[];
 }
 
 export interface UpdatePostInput {
   title?: string;
   body?: string;
-}
-
-export interface PaginationParams {
-  page: number;
-  pageSize: number;
-}
-
-export interface PaginatedResponse {
-  posts: BlogPost[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-export interface Comment {
-  postId: number;
-  id: number;
-  name: string;
-  email: string;
-  body: string;
+  category?: string;
+  views?: number;
+  likes?: number;
+  tags?: string[];
+  coverImage?: string;
 }
 
 export interface User {
@@ -59,12 +57,18 @@ export interface User {
   };
 }
 
+export interface Comment {
+  postId: number;
+  id: number;
+  name: string;
+  email: string;
+  body: string;
+}
+
 export interface BookmarkState {
-  bookmarkedIds: number[];
-  addBookmark: (postId: number) => void;
-  removeBookmark: (postId: number) => void;
-  isBookmarked: (postId: number) => boolean;
-  toggleBookmark: (postId: number) => void;
+  bookmarkedIds: string[];
+  toggleBookmark: (id: string) => void;
+  isBookmarked: (id: string) => boolean;
 }
 
 export interface ThemeState {

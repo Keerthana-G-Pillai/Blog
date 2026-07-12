@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
   currentPage: number;
@@ -6,91 +6,77 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: PaginationProps) {
-  const pages = [];
+export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
   const maxVisible = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let end = Math.min(totalPages, start + maxVisible - 1);
+  if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
 
-  if (endPage - startPage + 1 < maxVisible) {
-    startPage = Math.max(1, endPage - maxVisible + 1);
-  }
+  const pages = Array.from({ length: end - start + 1 }, (_, i) => start + i);
 
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
-  }
+  const btnBase = 'flex items-center justify-center h-10 min-w-10 px-3 rounded-xl text-sm font-medium transition-all';
 
   return (
-    <nav className="flex items-center justify-center gap-1" aria-label="Pagination">
-      {currentPage > 1 && (
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-600"
-          aria-label="Previous page"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Previous
-        </button>
-      )}
+    <nav className="flex items-center gap-2" aria-label="Pagination">
+      {/* Prev */}
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage <= 1}
+        className={btnBase}
+        aria-label="Previous page"
+        style={currentPage <= 1
+          ? { background: 'var(--bg-elevated)', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.4, border: '1px solid var(--border-subtle)' }
+          : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)', cursor: 'pointer' }}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
 
-      {startPage > 1 && (
+      {start > 1 && (
         <>
-          <button
-            onClick={() => onPageChange(1)}
-            className="min-w-10 rounded-lg px-3 py-2 text-sm text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
+          <button onClick={() => onPageChange(1)} className={btnBase}
+            style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
             1
           </button>
-          {startPage > 2 && <span className="px-2 text-gray-400">…</span>}
+          {start > 2 && <span style={{ color: 'var(--text-muted)' }} className="px-1 text-sm">…</span>}
         </>
       )}
 
-      {pages.map((page) => (
+      {pages.map((p) => (
         <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`min-w-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-            page === currentPage
-              ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
-              : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'
-          }`}
-          aria-label={`Page ${page}`}
-          aria-current={page === currentPage ? 'page' : undefined}
+          key={p}
+          onClick={() => onPageChange(p)}
+          aria-current={p === currentPage ? 'page' : undefined}
+          className={btnBase}
+          style={p === currentPage
+            ? { background: 'var(--accent)', color: '#fff', border: '1px solid transparent', boxShadow: '0 2px 8px rgba(79,70,229,0.25)' }
+            : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
         >
-          {page}
+          {p}
         </button>
       ))}
 
-      {endPage < totalPages && (
+      {end < totalPages && (
         <>
-          {endPage < totalPages - 1 && <span className="px-2 text-gray-400">…</span>}
-          <button
-            onClick={() => onPageChange(totalPages)}
-            className="min-w-10 rounded-lg px-3 py-2 text-sm text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
+          {end < totalPages - 1 && <span style={{ color: 'var(--text-muted)' }} className="px-1 text-sm">…</span>}
+          <button onClick={() => onPageChange(totalPages)} className={btnBase}
+            style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
             {totalPages}
           </button>
         </>
       )}
 
-      {currentPage < totalPages && (
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-600"
-          aria-label="Next page"
-        >
-          Next
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
+      {/* Next */}
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage >= totalPages}
+        className={btnBase}
+        aria-label="Next page"
+        style={currentPage >= totalPages
+          ? { background: 'var(--bg-elevated)', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.4, border: '1px solid var(--border-subtle)' }
+          : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)', cursor: 'pointer' }}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
     </nav>
   );
 }

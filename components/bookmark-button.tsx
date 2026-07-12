@@ -3,33 +3,28 @@
 import { Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/contexts/bookmark-context';
 
-interface BookmarkButtonProps {
-  postId: number;
-}
-
-export function BookmarkButton({ postId }: BookmarkButtonProps) {
+export function BookmarkButton({ postId }: { postId: string }) {
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const bookmarked = isBookmarked(postId);
+  const saved = isBookmarked(postId);
 
   return (
     <button
       type="button"
-      aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark post'}
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        toggleBookmark(postId);
+      aria-label={saved ? 'Remove bookmark' : 'Bookmark this post'}
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleBookmark(postId); }}
+      className="flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90"
+      style={saved ? {
+        background: 'var(--accent-subtle)',
+        color: 'var(--accent)',
+        border: '1px solid rgba(79,70,229,0.2)',
+      } : {
+        background: 'rgba(255,255,255,0.9)',
+        color: 'var(--text-secondary)',
+        backdropFilter: 'blur(4px)',
+        boxShadow: 'var(--shadow-sm)',
       }}
-      className="inline-flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
     >
-      <Bookmark
-        className={
-          bookmarked
-            ? 'h-5 w-5 text-blue-600 dark:text-blue-400'
-            : 'h-5 w-5 text-gray-400 dark:text-gray-500'
-        }
-        fill={bookmarked ? 'currentColor' : 'none'}
-      />
+      <Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} />
     </button>
   );
 }
