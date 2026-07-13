@@ -40,7 +40,6 @@ interface HeadingItem {
 }
 
 
-// Helper to extract Markdown headings
 function extractHeadings(text: string): HeadingItem[] {
   const lines = text.split('\n');
   const headings: HeadingItem[] = [];
@@ -62,19 +61,14 @@ function extractHeadings(text: string): HeadingItem[] {
   return headings;
 }
 
-// Simple Markdown inline parser
 function parseInline(str: string): string {
   let s = str;
-  // Bold: **text**
   s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Italic: *text*
   s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  // Inline code: `code`
   s = s.replace(/`(.*?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-xs">$1</code>');
   return s;
 }
 
-// Markdown blocks rendering engine
 function parseMarkdownToReact(text: string): React.ReactNode[] {
   const lines = text.split('\n');
   const elements: React.ReactNode[] = [];
@@ -161,17 +155,14 @@ export function PostView({ postId }: PostViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Likes state
   const [hasLiked, setHasLiked] = useState(false);
 
-  // Comment submission states
   const [commentName, setCommentName] = useState('');
   const [commentEmail, setCommentEmail] = useState('');
   const [commentText, setCommentText] = useState('');
   const [commentSuccess, setCommentSuccess] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
 
-  // TOC active heading states
   const [activeId, setActiveId] = useState<string>('');
 
   const { data: post, isLoading } = useQuery({
@@ -184,19 +175,16 @@ export function PostView({ postId }: PostViewProps) {
     queryFn: fetchAllPosts,
   });
 
-  // Extract headings memo
   const headings = useMemo(() => {
     if (!post?.body) return [];
     return extractHeadings(post.body);
   }, [post?.body]);
 
-  // Load liked state on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setHasLiked(localStorage.getItem(`inkverse_liked_${postId}`) === 'true');
   }, [postId]);
 
-  // Session storage views tracking
   useEffect(() => {
     if (!post) return;
     const viewedKey = `inkverse_viewed_${postId}`;
@@ -207,13 +195,10 @@ export function PostView({ postId }: PostViewProps) {
         .then(() => {
           qc.invalidateQueries({ queryKey: ['post', postId] });
         })
-        .catch((err) => {
-          console.warn('Failed to increment view counter:', err);
-        });
+        .catch(() => {});
     }
   }, [postId, post, qc]);
 
-  // Scrollspy for active heading highlight
   useEffect(() => {
     if (headings.length === 0) return;
 
@@ -291,8 +276,7 @@ export function PostView({ postId }: PostViewProps) {
     try {
       await updatePost(postId, { likes: nextLikesCount });
       qc.invalidateQueries({ queryKey: ['post', postId] });
-    } catch (err) {
-      console.warn('Failed to update likes count:', err);
+    } catch {
     }
   };
 
@@ -327,8 +311,7 @@ export function PostView({ postId }: PostViewProps) {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 py-10">
-      {/* Breadcrumb / back */}
-      <nav className="flex items-center gap-2 mb-8 text-sm" aria-label="Breadcrumb">
+        <nav className="flex items-center gap-2 mb-8 text-sm" aria-label="Breadcrumb">
         <Link
           href="/"
           className="flex items-center gap-1.5 transition-colors hover:text-indigo-600"
@@ -349,7 +332,6 @@ export function PostView({ postId }: PostViewProps) {
         </span>
       </nav>
 
-      {/* Error */}
       {error && (
         <div
           className="mb-6 rounded-xl p-4 text-sm flex items-center justify-between"
@@ -362,7 +344,6 @@ export function PostView({ postId }: PostViewProps) {
       )}
 
       <article>
-        {/* Category + read time + counters */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-5 pb-1 border-b border-default" style={{ borderBottomColor: 'var(--border-subtle)' }}>
           <div className="flex items-center gap-3">
             {post.category && <span className="tag">{post.category}</span>}
@@ -385,7 +366,6 @@ export function PostView({ postId }: PostViewProps) {
           </div>
         </div>
 
-        {/* Title */}
         <h1
           className="text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-snug mb-6"
           style={{ color: 'var(--text-primary)' }}
@@ -393,15 +373,12 @@ export function PostView({ postId }: PostViewProps) {
           {post.title}
         </h1>
 
-        {/* Author + actions row */}
         <div
           className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6"
           style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
-          {/* Author */}
           <div className="flex items-center gap-3">
             {post.authorAvatar ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={post.authorAvatar}
                 alt={post.authorName ?? ''}
@@ -423,7 +400,6 @@ export function PostView({ postId }: PostViewProps) {
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleLikeToggle}
@@ -477,10 +453,8 @@ export function PostView({ postId }: PostViewProps) {
           </div>
         </div>
 
-        {/* Cover image */}
         {post.coverImage && (
           <div className="mb-8 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', boxShadow: 'var(--shadow-md)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.coverImage}
               alt={post.title}
@@ -489,13 +463,10 @@ export function PostView({ postId }: PostViewProps) {
           </div>
         )}
 
-        {/* Dynamic Column Layout for Table of Contents and Article Body */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 xl:gap-12">
-          {/* Article Main Body */}
           <div className="lg:col-span-3 prose-custom max-w-none min-w-0">
             {parseMarkdownToReact(post.body)}
 
-            {/* Tags display */}
             {post.tags && post.tags.length > 0 && (
               <div
                 className="mt-8 pt-8 flex flex-wrap gap-2"
@@ -508,7 +479,6 @@ export function PostView({ postId }: PostViewProps) {
             )}
           </div>
 
-          {/* Table of Contents Sticky Sidebar */}
           <aside className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               {headings.length > 0 && (
@@ -554,7 +524,6 @@ export function PostView({ postId }: PostViewProps) {
       </article>
 
 
-      {/* Related posts */}
       {related.length > 0 && (
         <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Related articles">
           <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
@@ -566,14 +535,12 @@ export function PostView({ postId }: PostViewProps) {
         </section>
       )}
 
-      {/* ── Comments Section ── */}
       <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Comments">
         <h2 className="text-xl font-bold mb-8 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
           <MessageSquare className="h-5 w-5 text-indigo-500" />
           Comments
         </h2>
 
-        {/* Comment Form */}
         <form onSubmit={handleCommentSubmit} className="mb-10 rounded-2xl p-5 border" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card)' }}>
           <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Join the conversation</h3>
 

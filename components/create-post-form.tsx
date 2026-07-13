@@ -20,7 +20,6 @@ export function CreatePostForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto reading time preview helper
   const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
   const autoReadTime = Math.max(1, Math.ceil(wordCount / 200));
 
@@ -54,7 +53,6 @@ export function CreatePostForm() {
         coverImage: coverImage.trim() || undefined,
         tags: processedTags,
       });
-      // Invalidate the posts list so feed refreshes
       await qc.invalidateQueries({ queryKey: ['posts'] });
       router.push(`/blog/${post.id}`);
     } catch {
@@ -96,7 +94,6 @@ export function CreatePostForm() {
 
   return (
     <div className="mx-auto max-w-[800px] px-4 sm:px-6 lg:px-8 py-10">
-      {/* Header */}
       <Link
         href="/"
         className="flex items-center gap-2 text-sm mb-8 transition-colors hover:text-indigo-600"
@@ -134,7 +131,6 @@ export function CreatePostForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
         <div>
           <label htmlFor="post-title" style={labelStyle}>Title</label>
           <input
@@ -152,7 +148,6 @@ export function CreatePostForm() {
           {errors.title && <p id="title-err" className="mt-1.5 text-xs" style={{ color: 'var(--color-danger)' }} role="alert">{errors.title}</p>}
         </div>
 
-        {/* Category select */}
         <div>
           <label htmlFor="post-category" style={labelStyle}>Category</label>
           <select
@@ -169,7 +164,6 @@ export function CreatePostForm() {
           </select>
         </div>
 
-        {/* Cover Image URL input */}
         <div>
           <label htmlFor="post-cover" style={labelStyle}>Cover Image URL</label>
           <input
@@ -184,7 +178,6 @@ export function CreatePostForm() {
           />
         </div>
 
-        {/* Tags input */}
         <div>
           <label htmlFor="post-tags" style={labelStyle}>Tags</label>
           <input
@@ -199,7 +192,6 @@ export function CreatePostForm() {
           />
         </div>
 
-        {/* Body input */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label htmlFor="post-body" style={labelStyle}>Content</label>
@@ -226,7 +218,6 @@ export function CreatePostForm() {
           {errors.body && <p id="body-err" className="mt-1.5 text-xs" style={{ color: 'var(--color-danger)' }} role="alert">{errors.body}</p>}
         </div>
 
-        {/* Markdown Guide Box */}
         <div className="rounded-xl p-4 text-xs space-y-1.5 border" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }}>
           <p className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✍️ Markdown Formatting Guide</p>
           <p style={{ color: 'var(--text-secondary)' }}>Type headings and lists directly in the content field. They will automatically build your article's structural headings and the dynamic Table of Contents sidebar!</p>
@@ -240,7 +231,6 @@ export function CreatePostForm() {
           </div>
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={isSubmitting}

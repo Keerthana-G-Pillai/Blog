@@ -22,7 +22,6 @@ export function HomeFeed() {
   const [category, setCategory] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
-  // Sync state with URL category filter
   useEffect(() => {
     setCategory(urlCategory);
   }, [urlCategory]);
@@ -32,14 +31,12 @@ export function HomeFeed() {
     queryFn: fetchAllPosts,
   });
 
-  // Filter & search
   const filtered = useMemo(() => {
     let posts = filterByCategory(allPosts, category);
     posts = searchPosts(posts, query);
     return posts;
   }, [allPosts, category, query]);
 
-  // Category counts
   const categoryCounts = useMemo(() => {
     return allPosts.reduce<Record<string, number>>((acc, p) => {
       if (p.category) acc[p.category] = (acc[p.category] ?? 0) + 1;
@@ -47,7 +44,6 @@ export function HomeFeed() {
     }, {});
   }, [allPosts]);
 
-  // Pagination
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
@@ -62,7 +58,6 @@ export function HomeFeed() {
   return (
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
 
-      {/* ── Hero Header Section ──────────────────────────────────── */}
       <header className="text-center pt-16 pb-12 sm:pt-20 sm:pb-16">
         <h1
           className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-5"
@@ -84,7 +79,6 @@ export function HomeFeed() {
         )}
       </header>
 
-      {/* ── Featured hero ─────────────────────────────────────────── */}
       {isLoading ? (
         <FeaturedSkeleton />
       ) : featured ? (
@@ -93,13 +87,11 @@ export function HomeFeed() {
         </section>
       ) : null}
 
-      {/* ── Search + Filter row ───────────────────────────────────── */}
       <section className="mb-10 space-y-5" aria-label="Search and filter">
         <SearchBar onSearch={handleSearch} />
         <CategoryFilter selected={category} onChange={handleCategory} counts={categoryCounts} />
       </section>
 
-      {/* ── Results meta ─────────────────────────────────────────── */}
       {!isLoading && (
         <div className="flex items-center gap-2 mb-6">
           <Layers className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
@@ -129,7 +121,6 @@ export function HomeFeed() {
         </div>
       )}
 
-      {/* ── Error ────────────────────────────────────────────────── */}
       {isError && (
         <div
           className="mb-8 rounded-2xl p-6 text-center text-sm"
@@ -139,7 +130,6 @@ export function HomeFeed() {
         </div>
       )}
 
-      {/* ── Grid ─────────────────────────────────────────────────── */}
       {isLoading ? (
         <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => <CardSkeleton key={i} />)}
@@ -165,7 +155,6 @@ export function HomeFeed() {
         </section>
       )}
 
-      {/* ── Pagination ───────────────────────────────────────────── */}
       {totalPages > 1 && !isLoading && (
         <div className="mt-12 mb-8 flex justify-center">
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePage} />

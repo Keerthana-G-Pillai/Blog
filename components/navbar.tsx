@@ -36,18 +36,14 @@ export function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Auth States
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
-  // Theme States
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Load theme and auth session on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Load theme
     const savedTheme = localStorage.getItem('inkverse_theme') as 'light' | 'dark' | null;
     const initialTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     setTheme(initialTheme);
@@ -57,7 +53,6 @@ export function Navbar() {
       document.documentElement.classList.remove('dark');
     }
 
-    // Load auth
     const savedUser = localStorage.getItem('inkverse_user');
     if (savedUser) setCurrentUser(savedUser);
   }, []);
@@ -83,7 +78,6 @@ export function Navbar() {
     localStorage.removeItem('inkverse_user');
   };
 
-  // Keyboard shortcut for Cmd/Ctrl + K to focus search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -104,12 +98,10 @@ export function Navbar() {
     }
   };
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
@@ -134,7 +126,6 @@ export function Navbar() {
     >
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="InkVerse Home">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl"
@@ -147,7 +138,6 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden xl:flex items-center gap-0.5" aria-label="Main navigation">
             {NAV.map(({ href, label, icon: Icon }) => {
               const active = isActive(href);
@@ -173,9 +163,7 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Right Action Utilities */}
           <div className="flex items-center gap-2 ml-auto shrink-0">
-            {/* Search Pill trigger */}
             <button
               onClick={focusSearch}
               className="hidden md:flex items-center gap-2 h-9 px-3 rounded-lg border border-default text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
@@ -192,7 +180,6 @@ export function Navbar() {
               </kbd>
             </button>
 
-            {/* Mobile Search Button */}
             <button
               onClick={focusSearch}
               className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-default"
@@ -202,7 +189,6 @@ export function Navbar() {
               <Search className="h-4 w-4" />
             </button>
 
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-default transition-all"
@@ -212,13 +198,11 @@ export function Navbar() {
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
 
-            {/* Write article button */}
             <Link href="/blog/create" className="btn-primary text-xs py-2 px-4 h-9">
               <PenLine className="h-3.5 w-3.5" />
               Write
             </Link>
 
-            {/* Authentication status */}
             {currentUser ? (
               <div className="flex items-center gap-2">
                 <div
@@ -249,7 +233,6 @@ export function Navbar() {
               </button>
             )}
 
-            {/* Mobile hamburger */}
             <button
               className="xl:hidden flex items-center justify-center h-9 w-9 rounded-lg border border-default transition-colors"
               onClick={() => setMobileOpen(true)}
@@ -262,22 +245,18 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu overlay */}
       {mobileOpen && (
         <div className="xl:hidden fixed inset-0 z-50">
-          {/* Backdrop */}
           <div
             className="absolute inset-0"
             style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}
             onClick={() => setMobileOpen(false)}
           />
 
-          {/* Slide-down panel */}
           <div
             className="relative mx-4 mt-4 rounded-2xl overflow-hidden shadow-2xl"
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--accent)' }}>
@@ -297,7 +276,6 @@ export function Navbar() {
               </button>
             </div>
 
-            {/* Links */}
             <nav className="px-3 py-3 space-y-0.5" aria-label="Mobile navigation">
               {NAV.map(({ href, label, icon: Icon }) => {
                 const active = isActive(href);
@@ -323,7 +301,6 @@ export function Navbar() {
               })}
             </nav>
 
-            {/* Auth section inside mobile drawer */}
             <div className="px-4 pb-4 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
               {currentUser ? (
                 <div className="space-y-2">
@@ -359,7 +336,6 @@ export function Navbar() {
         </div>
       )}
 
-      {/* Authentication Modal Popup */}
       <SignInModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}

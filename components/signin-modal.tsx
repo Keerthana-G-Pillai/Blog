@@ -37,7 +37,6 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
       setIsLoading(false);
       onSuccess(tab === 'signin' ? email.split('@')[0] : name);
       onClose();
-      // Reset form
       setName('');
       setEmail('');
       setPassword('');
@@ -72,18 +71,15 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal Container */}
       <div
         className="relative w-full max-w-[380px] mx-4 rounded-2xl overflow-hidden border shadow-2xl animate-in fade-in zoom-in-95 duration-150"
         style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}
       >
-        {/* Header / Tabs */}
         <div className="flex border-b" style={{ borderColor: 'var(--border-subtle)' }}>
           <button
             onClick={() => { setTab('signin'); setError(null); }}
@@ -114,7 +110,6 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
           </button>
         </div>
 
-        {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="text-center pb-2">
             <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 mb-2">
@@ -131,7 +126,6 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
             </div>
           )}
 
-          {/* Name (Sign Up only) */}
           {tab === 'signup' && (
             <div>
               <label htmlFor="auth-name" style={labelStyle}>Full Name *</label>
@@ -150,7 +144,6 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
             </div>
           )}
 
-          {/* Email */}
           <div>
             <label htmlFor="auth-email" style={labelStyle}>Email Address *</label>
             <div style={inputContainerStyle}>
@@ -167,7 +160,6 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
             </div>
           </div>
 
-          {/* Password */}
           <div>
             <label htmlFor="auth-password" style={labelStyle}>Password *</label>
             <div style={inputContainerStyle}>
@@ -184,7 +176,6 @@ export function SignInModal({ isOpen, onClose, onSuccess }: SignInModalProps) {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
