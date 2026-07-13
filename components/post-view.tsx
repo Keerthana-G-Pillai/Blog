@@ -601,11 +601,23 @@ export function PostView({ postId }: PostViewProps) {
       </article>
 
 
+      {/* Related posts */}
+      {related.length > 0 && (
+        <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Related articles">
+          <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+            More in <span style={{ color: 'var(--accent)' }}>{post.category}</span>
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((rp) => <BlogCard key={rp.id} post={rp} />)}
+          </div>
+        </section>
+      )}
+
       {/* ── Comments Section ── */}
       <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Comments">
         <h2 className="text-xl font-bold mb-8 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
           <MessageSquare className="h-5 w-5 text-indigo-500" />
-          Comments ({comments.length})
+          Comments
         </h2>
 
         {/* Comment Form */}
@@ -681,39 +693,7 @@ export function PostView({ postId }: PostViewProps) {
             Post Comment
           </button>
         </form>
-
-        {/* Comments List */}
-        {commentsLoading ? (
-          <div className="text-center py-6 text-sm" style={{ color: 'var(--text-muted)' }}>Loading comments…</div>
-        ) : comments.length === 0 ? (
-          <div className="text-center py-10 border border-dashed rounded-2xl" style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}>
-            <p className="text-sm font-semibold mb-1">No comments yet</p>
-            <p className="text-xs">Be the first to share your thoughts!</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {comments.map((comment) => (
-              <div
-                key={comment.id}
-                className="rounded-2xl p-5 border flex gap-4"
-                style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card)' }}
-              >
-                <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                  {comment.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{comment.name}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{comment.email}</p>
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{comment.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
-
       <ConfirmationDialog
         isOpen={deleteOpen}
         onConfirm={handleDelete}
