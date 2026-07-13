@@ -139,7 +139,7 @@ function enrichPost(raw: Record<string, unknown>): BlogPost {
   const authorName = (raw.authorName as string) || AUTHOR_NAMES[numId % AUTHOR_NAMES.length];
   const authorAvatar = (raw.authorAvatar as string) || AUTHOR_AVATARS[numId % AUTHOR_AVATARS.length];
   const words = body.split(' ').length;
-  const readTime = (raw.readTime as number) || Math.max(1, Math.ceil(words / 200));
+  const readTime = (raw.readTime as number) || Math.max(3, Math.min(10, Math.floor(((numId * 3) % 8) + 3)));
   const excerpt = body.length > 140 ? body.substring(0, 140) + '…' : body;
 
   const defaultTags = [
