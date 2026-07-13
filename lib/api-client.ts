@@ -134,8 +134,12 @@ function enrichPost(raw: Record<string, unknown>): BlogPost {
 }
 
 export async function fetchAllPosts(): Promise<BlogPost[]> {
-  const { data } = await mockClient.get<Record<string, unknown>[]>('/posts');
-  return data.map(enrichPost).reverse();
+  try {
+    const { data } = await mockClient.get<Record<string, unknown>[]>('/posts');
+    return data.map(enrichPost).reverse();
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPostById(id: string): Promise<BlogPost | null> {
