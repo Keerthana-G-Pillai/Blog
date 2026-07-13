@@ -600,17 +600,6 @@ export function PostView({ postId }: PostViewProps) {
         </div>
       </article>
 
-      {/* Related posts */}
-      {related.length > 0 && (
-        <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Related articles">
-          <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
-            More in <span style={{ color: 'var(--accent)' }}>{post.category}</span>
-          </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((rp) => <BlogCard key={rp.id} post={rp} />)}
-          </div>
-        </section>
-      )}
 
       {/* ── Comments Section ── */}
       <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Comments">
