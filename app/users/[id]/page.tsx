@@ -5,6 +5,8 @@ import { fetchUserById, fetchAllUsers, fetchAllPosts } from '@/lib/api-client';
 import { BlogCard } from '@/components/blog-card';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 interface Props { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -15,15 +17,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${user.name}`,
     description: `Articles by ${user.name} — ${user.company.catchPhrase}`,
   };
-}
-
-export async function generateStaticParams() {
-  try {
-    const users = await fetchAllUsers();
-    return users.map((u) => ({ id: u.id.toString() }));
-  } catch {
-    return [];
-  }
 }
 
 const ACCENTS = [
@@ -42,8 +35,7 @@ export default async function UserProfilePage({ params }: Props) {
   const user = await fetchUserById(Number(id));
   if (!user) notFound();
 
-  // Fetch posts by matching userId from our MockAPI posts
-  const allPosts = await fetchAllPosts();
+  const allPosts = await fetchAllPosts().catch(() => []);
   const posts = allPosts.filter((p) => p.userId === user.id);
 
   const accent = ACCENTS[(user.id - 1) % ACCENTS.length];
@@ -51,7 +43,6 @@ export default async function UserProfilePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8 py-10">
-      {/* Back */}
       <Link
         href="/users"
         className="inline-flex items-center gap-2 text-sm mb-8 transition-colors hover:text-indigo-600"
@@ -61,17 +52,14 @@ export default async function UserProfilePage({ params }: Props) {
         All Authors
       </Link>
 
-      {/* Profile card */}
       <div
         className="rounded-2xl overflow-hidden mb-10"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
       >
-        {/* Top accent line */}
         <div className="h-1 w-full" style={{ background: `linear-gradient(to right, ${accent.line}, transparent)` }} />
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
-            {/* Avatar */}
             <div
               className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-xl font-extrabold"
               style={{ background: accent.bg, color: accent.color }}
@@ -95,7 +83,6 @@ export default async function UserProfilePage({ params }: Props) {
             </div>
           </div>
 
-          {/* Details grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             {[
               { icon: Mail, label: user.email },
@@ -119,7 +106,6 @@ export default async function UserProfilePage({ params }: Props) {
             ))}
           </div>
 
-          {/* Catchphrase */}
           {user.company.catchPhrase && (
             <blockquote
               className="pl-4 italic text-sm"
@@ -134,7 +120,6 @@ export default async function UserProfilePage({ params }: Props) {
         </div>
       </div>
 
-      {/* Posts */}
       <section>
         <h2 className="text-lg font-bold mb-5" style={{ color: 'var(--text-primary)' }}>
           Articles by{' '}
