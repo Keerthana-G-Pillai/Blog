@@ -4,7 +4,7 @@ import { BlogPost, User, Comment, CreatePostInput, UpdatePostInput } from './typ
 // ─── MockAPI (posts) ──────────────────────────────────────────────────────────
 const MOCKAPI_BASE =
   process.env.NEXT_PUBLIC_MOCKAPI_URL ??
-  'https://6872f93c46b4e7f718e3d1e7.mockapi.io/api/v1';
+  'https://jsonplaceholder.typicode.com';
 
 const mockClient = axios.create({ baseURL: MOCKAPI_BASE, timeout: 10000 });
 
@@ -338,17 +338,67 @@ export const ALL_CATEGORIES = CATEGORIES;
 
 // ─── Users & Comments (JSONPlaceholder) ──────────────────────────────────────
 
+const FALLBACK_USERS: User[] = [
+  {
+    id: 1,
+    name: 'Sarah Jenkins',
+    username: 'sarahj',
+    email: 'sarah.jenkins@inkverse.dev',
+    phone: '1-770-736-8031',
+    website: 'inkverse.dev',
+    address: { street: 'Kulas Light', suite: 'Apt. 556', city: 'Gwenborough', zipcode: '92998-3874', geo: { lat: '-37.3159', lng: '81.1496' } },
+    company: { name: 'InkVerse Staff', catchPhrase: 'Multi-layered neural-net', bs: 'harness e-markets' },
+  },
+  {
+    id: 2,
+    name: 'David Chen',
+    username: 'davidc',
+    email: 'david.chen@inkverse.dev',
+    phone: '1-880-736-8032',
+    website: 'inkverse.dev',
+    address: { street: 'Victor Plains', suite: 'Suite 879', city: 'Wisokyburgh', zipcode: '90566-7771', geo: { lat: '-43.9509', lng: '-34.4618' } },
+    company: { name: 'InkVerse Staff', catchPhrase: 'Proactive modular framework', bs: 'synergize bandwidth' },
+  },
+  {
+    id: 3,
+    name: 'Elena Rostova',
+    username: 'elenar',
+    email: 'elena.rostova@inkverse.dev',
+    phone: '1-990-736-8033',
+    website: 'inkverse.dev',
+    address: { street: 'Douglas Extension', suite: 'Suite 847', city: 'McKenziehaven', zipcode: '59590-4157', geo: { lat: '-29.4572', lng: '-164.2990' } },
+    company: { name: 'InkVerse Tech', catchPhrase: 'Face to face transition', bs: 'transition interfaces' },
+  },
+  {
+    id: 4,
+    name: 'Marcus Vance',
+    username: 'marcusv',
+    email: 'marcus.vance@inkverse.dev',
+    phone: '1-550-736-8034',
+    website: 'inkverse.dev',
+    address: { street: 'Hoeger Mall', suite: 'Apt. 692', city: 'South Elvis', zipcode: '53919-4257', geo: { lat: '24.8918', lng: '21.8984' } },
+    company: { name: 'Robel-Rohan', catchPhrase: 'Configurable hardware', bs: 'generate technologies' },
+  },
+];
+
 export async function fetchAllUsers(): Promise<User[]> {
-  const { data } = await jpClient.get<User[]>('/users');
-  return data;
+  try {
+    const { data } = await jpClient.get<User[]>('/users');
+    return data;
+  } catch (e) {
+    console.warn('JSONPlaceholder failed to fetch users, returning local fallback users:', e);
+    return FALLBACK_USERS;
+  }
 }
 
 export async function fetchUserById(id: number): Promise<User | null> {
   try {
     const { data } = await jpClient.get<User>(`/users/${id}`);
     return data;
-  } catch {
-    return null;
+  } catch (e) {
+    console.warn(`JSONPlaceholder failed to fetch user ${id}, returning local fallback user:`, e);
+    const local = FALLBACK_USERS.find((u) => u.id === id) || FALLBACK_USERS[id % FALLBACK_USERS.length] || FALLBACK_USERS[0];
+    return { ...local, id };
   }
 }
 
