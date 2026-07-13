@@ -13,8 +13,6 @@ import {
   Share2,
   Heart,
   Eye,
-  MessageSquare,
-  Send,
   User,
 } from 'lucide-react';
 import {
@@ -23,7 +21,6 @@ import {
   getRelatedPosts,
   deletePost,
   updatePost,
-  fetchCommentsByPostId,
 } from '@/lib/api-client';
 import { useBookmarks } from '@/contexts/bookmark-context';
 import { BlogCard } from '@/components/blog-card';
@@ -40,13 +37,6 @@ interface HeadingItem {
   level: number;
 }
 
-interface LocalComment {
-  id: string;
-  name: string;
-  email: string;
-  body: string;
-  createdAt: string;
-}
 
 // Helper to extract Markdown headings
 function extractHeadings(text: string): HeadingItem[] {
@@ -172,13 +162,6 @@ export function PostView({ postId }: PostViewProps) {
   // Likes state
   const [hasLiked, setHasLiked] = useState(false);
 
-  // Comments state
-  const [localComments, setLocalComments] = useState<LocalComment[]>([]);
-  const [commentText, setCommentText] = useState('');
-  const [commentName, setCommentName] = useState('');
-  const [commentEmail, setCommentEmail] = useState('');
-  const [commentError, setCommentError] = useState<string | null>(null);
-
   // TOC active heading states
   const [activeId, setActiveId] = useState<string>('');
 
@@ -192,44 +175,16 @@ export function PostView({ postId }: PostViewProps) {
     queryFn: fetchAllPosts,
   });
 
-  // Fetch server comments
-  const { data: serverComments = [], isLoading: commentsLoading } = useQuery({
-    queryKey: ['comments', postId],
-    queryFn: () => fetchCommentsByPostId(postId),
-    enabled: !!post,
-  });
-
   // Extract headings memo
   const headings = useMemo(() => {
     if (!post?.body) return [];
     return extractHeadings(post.body);
   }, [post?.body]);
 
-  // Merge server comments and local comments
-  const comments = useMemo(() => {
-    const mappedServer = serverComments.map((c) => ({
-      id: `server-${c.id}`,
-      name: c.name,
-      email: c.email,
-      body: c.body,
-      createdAt: new Date().toISOString(), // Mock timestamp for display
-    }));
-    return [...localComments, ...mappedServer];
-  }, [serverComments, localComments]);
-
-  // Load liked state and local comments on mount
+  // Load liked state on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setHasLiked(localStorage.getItem(`inkverse_liked_${postId}`) === 'true');
-
-    try {
-      const cachedComments = localStorage.getItem(`inkverse_comments_${postId}`);
-      if (cachedComments) {
-        setLocalComments(JSON.parse(cachedComments));
-      }
-    } catch (e) {
-      console.error(e);
-    }
   }, [postId]);
 
   // Session storage views tracking
@@ -332,35 +287,6 @@ export function PostView({ postId }: PostViewProps) {
     }
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCommentError(null);
-
-    if (!commentName.trim()) {
-      setCommentError('Name is required');
-      return;
-    }
-    if (!commentText.trim()) {
-      setCommentError('Comment body is required');
-      return;
-    }
-
-    const newComment: LocalComment = {
-      id: Date.now().toString(),
-      name: commentName.trim(),
-      email: commentEmail.trim() || 'anonymous@inkverse.dev',
-      body: commentText.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    const updated = [newComment, ...localComments];
-    setLocalComments(updated);
-    localStorage.setItem(`inkverse_comments_${postId}`, JSON.stringify(updated));
-
-    setCommentText('');
-    setCommentName('');
-    setCommentEmail('');
-  };
 
   const scrollToHeading = (id: string) => {
     const el = document.getElementById(id);
@@ -425,10 +351,7 @@ export function PostView({ postId }: PostViewProps) {
               <Heart className="h-4 w-4 text-red-400 fill-red-400/20" />
               {post.likes ?? 0} likes
             </span>
-            <span className="flex items-center gap-1">
-              <MessageSquare className="h-4 w-4 text-indigo-400" />
-              {comments.length} comments
-            </span>
+
           </div>
         </div>
 
@@ -613,87 +536,7 @@ export function PostView({ postId }: PostViewProps) {
         </section>
       )}
 
-      {/* ── Comments Section ── */}
-      <section className="mt-16 pt-10 border-t" style={{ borderTopColor: 'var(--border-subtle)' }} aria-label="Comments">
-        <h2 className="text-xl font-bold mb-8 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-          <MessageSquare className="h-5 w-5 text-indigo-500" />
-          Comments
-        </h2>
 
-        {/* Comment Form */}
-        <form onSubmit={handleCommentSubmit} className="mb-10 rounded-2xl p-5 border" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card)' }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Join the conversation</h3>
-
-          {commentError && (
-            <div className="mb-4 text-xs font-semibold" style={{ color: 'var(--color-danger)' }}>
-              {commentError}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label htmlFor="comment-name" className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Name *</label>
-              <input
-                id="comment-name"
-                type="text"
-                placeholder="Your name"
-                value={commentName}
-                onChange={(e) => setCommentName(e.target.value)}
-                required
-                className="w-full text-sm px-3.5 py-2.5 rounded-lg border outline-none bg-input"
-                style={{
-                  background: 'var(--bg-input)',
-                  borderColor: 'var(--border-default)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="comment-email" className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
-              <input
-                id="comment-email"
-                type="email"
-                placeholder="your@email.com (optional)"
-                value={commentEmail}
-                onChange={(e) => setCommentEmail(e.target.value)}
-                className="w-full text-sm px-3.5 py-2.5 rounded-lg border outline-none bg-input"
-                style={{
-                  background: 'var(--bg-input)',
-                  borderColor: 'var(--border-default)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="comment-body" className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Comment *</label>
-            <textarea
-              id="comment-body"
-              rows={4}
-              placeholder="What are your thoughts on this article?"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              required
-              className="w-full text-sm px-3.5 py-2.5 rounded-lg border outline-none bg-input resize-y"
-              style={{
-                background: 'var(--bg-input)',
-                borderColor: 'var(--border-default)',
-                color: 'var(--text-primary)',
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn-primary py-2 px-5 text-sm"
-            style={{ borderRadius: 'var(--radius-md)' }}
-          >
-            <Send className="h-3.5 w-3.5" />
-            Post Comment
-          </button>
-        </form>
-      </section>
       <ConfirmationDialog
         isOpen={deleteOpen}
         onConfirm={handleDelete}

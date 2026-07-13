@@ -1,14 +1,15 @@
 import axios from 'axios';
-import { BlogPost, User, Comment, CreatePostInput, UpdatePostInput } from './types';
+import { BlogPost, User, CreatePostInput, UpdatePostInput } from './types';
 
 // ─── MockAPI (posts) ──────────────────────────────────────────────────────────
-const MOCKAPI_BASE =
-  process.env.NEXT_PUBLIC_MOCKAPI_URL ??
-  'https://jsonplaceholder.typicode.com';
+const envUrl = process.env.NEXT_PUBLIC_MOCKAPI_URL;
+const MOCKAPI_BASE = (envUrl && !envUrl.includes('6872f93c46b4e7f718e3d1e7'))
+  ? envUrl
+  : 'https://jsonplaceholder.typicode.com';
 
 const mockClient = axios.create({ baseURL: MOCKAPI_BASE, timeout: 10000 });
 
-// ─── JSONPlaceholder (users, comments) ───────────────────────────────────────
+// ─── JSONPlaceholder (users) ──────────────────────────────────────────
 const jpClient = axios.create({
   baseURL: 'https://jsonplaceholder.typicode.com',
   timeout: 10000,
@@ -124,119 +125,24 @@ function enrichPost(raw: Record<string, unknown>): BlogPost {
   };
 }
 
-// Fallback in-memory posts store
-let fallbackPosts: Record<string, unknown>[] = [
-  {
-    id: '1',
-    userId: 1,
-    title: 'Designing the Next Generation of SaaS Landing Pages',
-    body: 'In the rapidly evolving world of software-as-a-service, landing pages are no longer just static digital brochures. They are dynamic experiences that must build trust, demonstrate value within seconds, and convert visitors into active users. This article dives deep into the visual cues, minimal copywriting structures, and performance optimizations that drive conversion rates in modern UI design. We discuss grid alignments, font pairing choices, and contrast values.',
-    category: 'Design',
-    createdAt: '2026-07-10T12:00:00.000Z',
-    featured: true,
-  },
-  {
-    id: '2',
-    userId: 2,
-    title: 'Unlocking Peak Performance in Tailwind CSS v4',
-    body: 'Tailwind CSS v4 introduces a completely redesigned engine built for speed. With zero-configuration setup, Rust-powered build speed, and native CSS custom properties integration, it represents a massive leap forward. Here is a comprehensive guide to organizing your styling system and leveraging new layout properties to build pixel-perfect user interfaces.',
-    category: 'Technology',
-    createdAt: '2026-07-09T14:30:00.000Z',
-    featured: false,
-  },
-  {
-    id: '3',
-    userId: 3,
-    title: 'The Subtle Art of Minimalist Productivity',
-    body: "Productivity isn't about doing more things; it's about doing the right things with fewer distractions. In this essay, we explore how reducing your daily tooling stack to the bare minimum can amplify your focus and help you achieve a flow state. We analyze calendar blocking, single-tasking, and the mental health benefits of going analog.",
-    category: 'Lifestyle',
-    createdAt: '2026-07-08T09:15:00.000Z',
-    featured: false,
-  },
-  {
-    id: '4',
-    userId: 4,
-    title: 'Scale or Fail: Technical Debt in Hypergrowth Startups',
-    body: 'Building fast is a requirement for early-stage startups, but ignoring system architecture can lead to catastrophic failures later. We outline actionable strategies for engineering leaders to balance feature velocity with code quality, establish refactoring budgets, and scale microservices without losing developer productivity.',
-    category: 'Business',
-    createdAt: '2026-07-07T16:45:00.000Z',
-    featured: false,
-  },
-  {
-    id: '5',
-    userId: 5,
-    title: 'Chasing Solitude: A Travel Guide to Northern Patagonia',
-    body: 'Patagonia is famous for its dramatic peaks and wild winds, but finding true solitude requires venturing off the beaten path. This travel diary covers the remote routes of Northern Patagonia, where pristine glacial lakes meet dense ancient forests, offering a quiet sanctuary for the modern traveler seeking disconnection.',
-    category: 'Travel',
-    createdAt: '2026-07-06T11:00:00.000Z',
-    featured: false,
-  },
-  {
-    id: '6',
-    userId: 6,
-    title: 'The Future of Quantum Computing and Cryptography',
-    body: 'As quantum computers grow in power, the encryption standards that protect the modern internet are facing unprecedented risks. This paper explains the fundamental principles of post-quantum cryptography, detailing the new mathematical frameworks researchers are building to secure data in a post-quantum world.',
-    category: 'Science',
-    createdAt: '2026-07-05T08:00:00.000Z',
-    featured: false,
-  }
-];
-
-// Synchronize with localStorage on client side if available
-function getLocalPosts(): Record<string, unknown>[] {
-  if (typeof window === 'undefined') return fallbackPosts;
-  try {
-    const cached = localStorage.getItem('inkverse_fallback_posts');
-    if (cached) {
-      return JSON.parse(cached);
-    } else {
-      localStorage.setItem('inkverse_fallback_posts', JSON.stringify(fallbackPosts));
-      return fallbackPosts;
-    }
-  } catch {
-    return fallbackPosts;
-  }
-}
-
-function saveLocalPosts(posts: Record<string, unknown>[]) {
-  fallbackPosts = posts;
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem('inkverse_fallback_posts', JSON.stringify(posts));
-  } catch (e) {
-    console.error('Failed to save fallback posts', e);
-  }
-}
-
 // ─── Posts API ────────────────────────────────────────────────────────────────
 
 export async function fetchAllPosts(): Promise<BlogPost[]> {
-  try {
-    const { data } = await mockClient.get<Record<string, unknown>[]>('/posts');
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map(enrichPost).reverse();
-    }
-  } catch (e) {
-    console.warn('MockAPI failed, falling back to local posts storage:', e);
-  }
-  return getLocalPosts().map(enrichPost).reverse();
+  const { data } = await mockClient.get<Record<string, unknown>[]>('/posts');
+  return data.map(enrichPost).reverse();
 }
 
 export async function fetchPostById(id: string): Promise<BlogPost | null> {
   try {
     const { data } = await mockClient.get<Record<string, unknown>>(`/posts/${id}`);
     return enrichPost(data);
-  } catch (e) {
-    console.warn(`MockAPI failed to fetch post ${id}, checking local posts:`, e);
-    const local = getLocalPosts().find((p) => String(p.id) === id);
-    if (local) return enrichPost(local);
+  } catch {
     return null;
   }
 }
 
 export async function createPost(input: CreatePostInput): Promise<BlogPost> {
-  const newRaw: Record<string, unknown> = {
-    id: Date.now().toString(),
+  const { data } = await mockClient.post<Record<string, unknown>>('/posts', {
     title: input.title,
     body: input.body,
     userId: input.userId ?? 1,
@@ -244,71 +150,22 @@ export async function createPost(input: CreatePostInput): Promise<BlogPost> {
     coverImage: input.coverImage,
     tags: input.tags,
     createdAt: new Date().toISOString(),
-    featured: false,
     views: 0,
     likes: 0,
-  };
-
-  try {
-    const { data } = await mockClient.post<Record<string, unknown>>('/posts', {
-      title: input.title,
-      body: input.body,
-      userId: input.userId ?? 1,
-      category: input.category ?? 'Technology',
-      coverImage: input.coverImage,
-      tags: input.tags,
-      createdAt: new Date().toISOString(),
-      views: 0,
-      likes: 0,
-    });
-    const posts = getLocalPosts();
-    posts.push(data);
-    saveLocalPosts(posts);
-    return enrichPost(data);
-  } catch (e) {
-    console.warn('MockAPI failed to create post, creating locally:', e);
-    const posts = getLocalPosts();
-    posts.push(newRaw);
-    saveLocalPosts(posts);
-    return enrichPost(newRaw);
-  }
+  });
+  return enrichPost(data);
 }
 
 export async function updatePost(id: string, input: UpdatePostInput): Promise<BlogPost> {
-  try {
-    const { data } = await mockClient.put<Record<string, unknown>>(`/posts/${id}`, {
-      ...input,
-      updatedAt: new Date().toISOString(),
-    });
-    const posts = getLocalPosts().map((p) => (String(p.id) === id ? { ...p, ...data } : p));
-    saveLocalPosts(posts);
-    return enrichPost(data);
-  } catch (e) {
-    console.warn(`MockAPI failed to update post ${id}, updating locally:`, e);
-    const posts = getLocalPosts();
-    const index = posts.findIndex((p) => String(p.id) === id);
-    if (index !== -1) {
-      const updated = {
-        ...posts[index],
-        ...input,
-        updatedAt: new Date().toISOString(),
-      };
-      posts[index] = updated;
-      saveLocalPosts(posts);
-      return enrichPost(updated);
-    }
-    throw new Error('Post not found locally');
-  }
+  const { data } = await mockClient.put<Record<string, unknown>>(`/posts/${id}`, {
+    ...input,
+    updatedAt: new Date().toISOString(),
+  });
+  return enrichPost(data);
 }
 
 export async function deletePost(id: string): Promise<void> {
-  try {
-    await mockClient.delete(`/posts/${id}`);
-  } catch (e) {
-    console.warn(`MockAPI failed to delete post ${id}, deleting locally:`, e);
-  }
-  const posts = getLocalPosts().filter((p) => String(p.id) !== id);
-  saveLocalPosts(posts);
+  await mockClient.delete(`/posts/${id}`);
 }
 
 export function searchPosts(posts: BlogPost[], query: string): BlogPost[] {
@@ -336,7 +193,7 @@ export function getRelatedPosts(posts: BlogPost[], current: BlogPost, limit = 3)
 
 export const ALL_CATEGORIES = CATEGORIES;
 
-// ─── Users & Comments (JSONPlaceholder) ──────────────────────────────────────
+// ─── Users (JSONPlaceholder) ─────────────────────────────────────────────────
 
 const FALLBACK_USERS: User[] = [
   {
@@ -402,11 +259,4 @@ export async function fetchUserById(id: number): Promise<User | null> {
   }
 }
 
-export async function fetchCommentsByPostId(postId: string): Promise<Comment[]> {
-  try {
-    const { data } = await jpClient.get<Comment[]>(`/posts/${postId}/comments`);
-    return data;
-  } catch {
-    return [];
-  }
-}
+
