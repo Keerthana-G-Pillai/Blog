@@ -73,5 +73,4 @@ export interface BookmarkState {
 export interface ThemeState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-}
-//...
+}

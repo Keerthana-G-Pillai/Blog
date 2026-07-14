@@ -8,7 +8,6 @@ const mockClient = axios.create({ baseURL: MOCKAPI_BASE, timeout: 10000 });
 const devtoClient = axios.create({
   baseURL: 'https://dev.to/api',
   timeout: 10000,
-  headers: { 'api-key': process.env.NEXT_PUBLIC_DEVTO_API_KEY ?? '' },
 });
 
 const jpClient = axios.create({
