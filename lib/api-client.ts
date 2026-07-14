@@ -5,6 +5,12 @@ const MOCKAPI_BASE = process.env.NEXT_PUBLIC_MOCKAPI_URL ?? '';
 
 const mockClient = axios.create({ baseURL: MOCKAPI_BASE, timeout: 10000 });
 
+const devtoClient = axios.create({
+  baseURL: 'https://dev.to/api',
+  timeout: 10000,
+  headers: { 'api-key': process.env.NEXT_PUBLIC_DEVTO_API_KEY ?? '' },
+});
+
 const jpClient = axios.create({
   baseURL: 'https://jsonplaceholder.typicode.com',
   timeout: 10000,
@@ -118,10 +124,39 @@ function enrichPost(raw: Record<string, unknown>): BlogPost {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDevtoPost(a: any): BlogPost {
+  const tags: string[] = Array.isArray(a.tag_list) ? a.tag_list : [];
+  const category = tags[0]
+    ? tags[0].charAt(0).toUpperCase() + tags[0].slice(1)
+    : CATEGORIES[a.id % CATEGORIES.length];
+  const coverImage = a.cover_image || a.social_image
+    || (COVER_IMAGES[category] ?? COVER_IMAGES.Technology)[a.id % 3];
+  const body = a.body_markdown || a.description || '';
+  const excerpt = a.description || body.substring(0, 140) + '…';
+  return {
+    id: String(a.id),
+    userId: a.user_id ?? 1,
+    title: a.title,
+    body,
+    excerpt,
+    category,
+    coverImage,
+    authorName: a.user?.name ?? '',
+    authorAvatar: a.user?.profile_image_90 ?? a.user?.profile_image ?? '',
+    readTime: a.reading_time_minutes ?? 5,
+    featured: false,
+    views: a.page_views_count ?? 0,
+    likes: a.public_reactions_count ?? 0,
+    tags,
+    createdAt: a.published_at,
+  };
+}
+
 export async function fetchAllPosts(): Promise<BlogPost[]> {
   try {
-    const { data } = await mockClient.get<Record<string, unknown>[]>('/post');
-    return data.map(enrichPost).reverse();
+    const { data } = await devtoClient.get('/articles?per_page=30&top=30');
+    return data.map(mapDevtoPost);
   } catch {
     return [];
   }
@@ -129,8 +164,8 @@ export async function fetchAllPosts(): Promise<BlogPost[]> {
 
 export async function fetchPostById(id: string): Promise<BlogPost | null> {
   try {
-    const { data } = await mockClient.get<Record<string, unknown>>(`/post/${id}`);
-    return enrichPost(data);
+    const { data } = await devtoClient.get(`/articles/${id}`);
+    return mapDevtoPost(data);
   } catch {
     return null;
   }
