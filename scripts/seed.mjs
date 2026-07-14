@@ -1,13 +1,26 @@
 import { createRequire } from 'module';
+import { readFileSync, existsSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = resolve(__dirname, '../.env.local');
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+    const [key, ...rest] = line.trim().split('=');
+    if (key && !key.startsWith('#')) process.env[key] = rest.join('=');
+  }
+}
+
 const require = createRequire(import.meta.url);
 const POSTS = require('../data/posts.json');
 
 const MOCKAPI_BASE = process.env.NEXT_PUBLIC_MOCKAPI_URL ?? '';
 
 async function seed() {
-  console.log(`Seeding ${POSTS.length} posts to ${MOCKAPI_BASE}/posts ...\n`);
+  console.log(`Seeding ${POSTS.length} posts to ${MOCKAPI_BASE}/post ...\n`);
 
-  const checkRes = await fetch(`${MOCKAPI_BASE}/posts`);
+  const checkRes = await fetch(`${MOCKAPI_BASE}/post`);
   if (!checkRes.ok) {
     console.error(`✗ MockAPI returned ${checkRes.status}. Check your NEXT_PUBLIC_MOCKAPI_URL.`);
     process.exit(1);
@@ -21,7 +34,7 @@ async function seed() {
 
   let created = 0;
   for (const post of POSTS) {
-    const res = await fetch(`${MOCKAPI_BASE}/posts`, {
+    const res = await fetch(`${MOCKAPI_BASE}/post`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

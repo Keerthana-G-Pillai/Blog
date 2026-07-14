@@ -120,7 +120,7 @@ function enrichPost(raw: Record<string, unknown>): BlogPost {
 
 export async function fetchAllPosts(): Promise<BlogPost[]> {
   try {
-    const { data } = await mockClient.get<Record<string, unknown>[]>('/posts');
+    const { data } = await mockClient.get<Record<string, unknown>[]>('/post');
     return data.map(enrichPost).reverse();
   } catch {
     return [];
@@ -129,7 +129,7 @@ export async function fetchAllPosts(): Promise<BlogPost[]> {
 
 export async function fetchPostById(id: string): Promise<BlogPost | null> {
   try {
-    const { data } = await mockClient.get<Record<string, unknown>>(`/posts/${id}`);
+    const { data } = await mockClient.get<Record<string, unknown>>(`/post/${id}`);
     return enrichPost(data);
   } catch {
     return null;
@@ -137,7 +137,7 @@ export async function fetchPostById(id: string): Promise<BlogPost | null> {
 }
 
 export async function createPost(input: CreatePostInput): Promise<BlogPost> {
-  const { data } = await mockClient.post<Record<string, unknown>>('/posts', {
+  const { data } = await mockClient.post<Record<string, unknown>>('/post', {
     title: input.title,
     body: input.body,
     userId: input.userId,
@@ -152,7 +152,7 @@ export async function createPost(input: CreatePostInput): Promise<BlogPost> {
 }
 
 export async function updatePost(id: string, input: UpdatePostInput): Promise<BlogPost> {
-  const { data } = await mockClient.put<Record<string, unknown>>(`/posts/${id}`, {
+  const { data } = await mockClient.put<Record<string, unknown>>(`/post/${id}`, {
     ...input,
     updatedAt: new Date().toISOString(),
   });
@@ -160,7 +160,7 @@ export async function updatePost(id: string, input: UpdatePostInput): Promise<Bl
 }
 
 export async function deletePost(id: string): Promise<void> {
-  await mockClient.delete(`/posts/${id}`);
+  await mockClient.delete(`/post/${id}`);
 }
 
 export function searchPosts(posts: BlogPost[], query: string): BlogPost[] {
