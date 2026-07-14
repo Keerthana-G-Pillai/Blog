@@ -5,7 +5,6 @@ export interface BlogPost {
   body: string;
   createdAt?: string;
   updatedAt?: string;
-  // Extended fields stored in MockAPI
   category?: string;
   coverImage?: string;
   readTime?: number;
