@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { BlogPost, User, CreatePostInput, UpdatePostInput } from './types';
-import SEED_POSTS from '../data/posts.json';
 
 const MOCKAPI_BASE = process.env.NEXT_PUBLIC_MOCKAPI_URL ?? '';
 
@@ -72,26 +71,12 @@ const AUTHOR_NAMES = [
   'Morgan Davis', 'Casey Kim', 'Riley Zhang', 'Quinn Park',
 ];
 
-const REALISTIC_ENGLISH_POSTS = SEED_POSTS;
-
-function isLatin(str: string): boolean {
-  const latinWords = ['sunt', 'facere', 'qui', 'est', 'esse', 'aut', 'eum', 'dolor', 'quia', 'suscipit', 'provident', 'voluptas'];
-  const words = str.toLowerCase().split(/\s+/);
-  return words.some(w => latinWords.includes(w));
-}
-
 function enrichPost(raw: Record<string, unknown>): BlogPost {
   const id = String(raw.id ?? '');
   const numId = parseInt(id, 10) || 0;
 
-  let title = String(raw.title ?? '');
-  let body = String(raw.body ?? '');
-
-  if (numId <= 100 && (isLatin(title) || isLatin(body))) {
-    const fallback = REALISTIC_ENGLISH_POSTS[numId % REALISTIC_ENGLISH_POSTS.length];
-    title = fallback.title;
-    body = fallback.body;
-  }
+  const title = String(raw.title ?? '');
+  const body = String(raw.body ?? '');
 
   const category = (raw.category as string) || CATEGORIES[numId % CATEGORIES.length];
   const covers = COVER_IMAGES[category] ?? COVER_IMAGES.Technology;
